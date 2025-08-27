@@ -1,39 +1,84 @@
-import { StatusBar } from 'expo-status-bar';
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import {
+  Alert,
+  FlatList,
+  Keyboard,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState } from "react";
 
 export default function App() {
+  const [tasks, setTasks] = useState([]); //Estado para armazenar a lista de tarefas
+  const [newTask, setNewTask] = useState(""); //Estado para o texto da nova tarefa
+
+  const addTask = () => {
+    if (newTask.trim().length > 0) {
+      //Garante que a tarefa não seja vazia
+      setTasks((prevTasks) => [
+        ...prevTasks,
+        { id: Date.now().toString(), text: newTask.trim(), completed: false }, //Cria uma nova tarefa com id unico
+      ]);
+      setNewTask(""); // Limpar o campo de input
+      Keyboard.dismiss(); // Fecha o teclado do usuário
+    } else {
+      Alert.alert("Atenção", "Por favor, digite uma tarefa.");
+    }
+  };
+
   return (
     <View style={styles.container}>
-      
+      {/* cabeçalho */}
       <View style={styles.topBar}>
-        <Text style={styles.topBarTitle}>Minhsa Tarefas</Text>
+        <Text style={styles.topBarTitle}>Minhas Tarefas</Text>
         <TouchableOpacity>
-          <Text>🌙</Text>
+          <Text>🌛</Text>
         </TouchableOpacity>
       </View>
 
+      {/* Local onde o usuário insere as tarefas */}
       <View style={styles.card}>
-        <TextInput style={styles.input} placeholder='Adicionar nova tarefa...'/>
-        
-        <TouchableOpacity style={styles.addButton}>
+        <TextInput
+          style={styles.input}
+          placeholder="Adicionar nova tarefa..."
+          value={newTask}
+          onChangeText={setNewTask}
+          onSubmitEditing={addTask} //Adiciona a tarefa ao pressionar Enter no teclado
+        />
+        <TouchableOpacity style={styles.addButton} onPress={addTask}>
           <Text style={styles.buttonText}>Adicionar</Text>
         </TouchableOpacity>
       </View>
 
-      {/* //lista de tarefas */}
-
-      <FlatList style={styles.flatList}
-      ListEmptyComponent={()=>(
-        <Text style={styles.emptyListText}>Nenhuma Tarefa adicionada ainda</Text>
-      )}
-      contentContainerStyle={styles.flatListContent}
-      /> {/*  manda coisas em formato de lista normal */}
+      {/* Lista de tarefas do usuário */}
+      <FlatList
+        style={styles.flatList}
+        data={tasks}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View key={item.id} style={styles.taskItem}>
+            <Text>{item.text}</Text>
+            <TouchableOpacity>
+              <Text>🗑️</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        ListEmptyComponent={() => (
+          <Text style={styles.emptyListText}>
+            Nenhuma tarefa adicionada ainda.
+          </Text>
+        )}
+        contentContainerStyle={styles.flatListContent}
+      />
 
       <StatusBar style="auto" />
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
